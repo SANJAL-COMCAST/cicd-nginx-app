@@ -22,7 +22,7 @@ spec:
 
       - name: nginx
 
-        image: sanjal29/nginx-app:13
+        image: sanjal29/nginx-app:14
 
         ports:
         - containerPort: 80
