@@ -3,16 +3,10 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "sanjal29/nginx-app"
-        IMAGE_TAG = "v2"
+        IMAGE_TAG = "${BUILD_NUMBER}"
     }
 
     stages {
-
-        stage('Clone Repository') {
-            steps {
-                git 'https://github.com/SANJAL-COMCAST/cicd-nginx-app.git'
-            }
-        }
 
         stage('Build Docker Image') {
             steps {
@@ -41,7 +35,9 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                bat 'kubectl apply -f k8s-manifests/'
+                bat '''
+                kubectl set image deployment/nginx-deployment nginx=%DOCKER_IMAGE%:%IMAGE_TAG%
+                '''
             }
         }
     }
