@@ -36,10 +36,7 @@ pipeline {
         stage('Update Kubernetes Manifest') {
             steps {
                 bat '''
-powershell -Command "(Get-Content k8s-manifests/deployment.yaml) `
--replace 'sanjal29/nginx-app:.*', `
-'%DOCKER_IMAGE%:%IMAGE_TAG%' `
-| Set-Content k8s-manifests/deployment.yaml"
+powershell -Command "(Get-Content k8s-manifests/deployment.yaml) -replace 'sanjal29/nginx-app:.*','%DOCKER_IMAGE%:%IMAGE_TAG%' | Set-Content k8s-manifests/deployment.yaml"
 '''
             }
         }
@@ -70,5 +67,4 @@ git push https://%GIT_USERNAME%:%GIT_PASSWORD%@github.com/SANJAL-COMCAST/cicd-ng
         }
 
     }
-
 }
