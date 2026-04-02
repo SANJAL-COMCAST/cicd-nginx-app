@@ -1,0 +1,48 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = "sanjal29/nginx-app"
+        IMAGE_TAG = "v2"
+    }
+
+    stages {
+
+        stage('Clone Repository') {
+            steps {
+                git 'https://github.com/SANJAL-COMCAST/cicd-nginx-app.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                bat 'docker build -t %DOCKER_IMAGE%:%IMAGE_TAG% app/'
+            }
+        }
+
+        stage('Login to DockerHub') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'USERNAME',
+                    passwordVariable: 'PASSWORD'
+                )]) {
+
+                    bat 'docker login -u %USERNAME% -p %PASSWORD%'
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                bat 'docker push %DOCKER_IMAGE%:%IMAGE_TAG%'
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                bat 'kubectl apply -f k8s-manifests/'
+            }
+        }
+    }
+}
