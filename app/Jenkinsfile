@@ -33,13 +33,42 @@ pipeline {
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('Update Kubernetes Manifest') {
             steps {
                 bat '''
-                kubectl apply -f k8s-manifests/
-                kubectl set image deployment/nginx-deployment nginx=%DOCKER_IMAGE%:%IMAGE_TAG%
-                '''
+powershell -Command "(Get-Content k8s-manifests/deployment.yaml) `
+-replace 'sanjal29/nginx-app:.*', `
+'%DOCKER_IMAGE%:%IMAGE_TAG%' `
+| Set-Content k8s-manifests/deployment.yaml"
+'''
             }
         }
+
+        stage('Commit & Push Changes to GitHub') {
+            steps {
+
+                withCredentials([usernamePassword(
+                    credentialsId: 'github-cred-f',
+                    usernameVariable: 'GIT_USERNAME',
+                    passwordVariable: 'GIT_PASSWORD'
+                )]) {
+
+                    bat '''
+git config user.email "jenkins@example.com"
+git config user.name "jenkins"
+
+git pull origin main
+
+git add k8s-manifests/deployment.yaml
+
+git commit -m "Updated image to %IMAGE_TAG%" --allow-empty
+
+git push https://%GIT_USERNAME%:%GIT_PASSWORD%@github.com/SANJAL-COMCAST/cicd-nginx-app.git HEAD:main
+'''
+                }
+            }
+        }
+
     }
+
 }
